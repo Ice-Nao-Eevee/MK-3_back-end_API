@@ -2,7 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\SiswaController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Route untuk ngetes saja
+Route::get('/ping', function () {
+    return response()->json(['message' => 'pong']);
+});
+
+// Route utama untuk Roster Siswa
+Route::get('/siswa', [SiswaController::class, 'index']);
