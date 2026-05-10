@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\GalleryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
-    return response()->json(['message' => 'pong']);
+    return response()->json([
+        'message' => 'pong'
+    ]);
 });
 
 /*
@@ -32,4 +34,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/gallery', [GalleryController::class, 'index']);
     Route::post('/gallery', [GalleryController::class, 'store']);
-});git status
+});
