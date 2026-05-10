@@ -13,10 +13,10 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-            'role' => ['nullable', 'in:siswa,wali_kelas'],
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+            'role' => 'nullable|in:siswa,wali_kelas',
         ]);
 
         $user = User::create([
@@ -32,7 +32,6 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Register berhasil',
             'token' => $token,
-            'token_type' => 'Bearer',
             'user' => $user,
         ], 201);
     }
@@ -40,8 +39,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'email' => 'required|string|email',
+            'password' => 'required|string',
         ]);
 
         $user = User::where('email', $validated['email'])->first();
@@ -58,9 +57,8 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Login berhasil',
             'token' => $token,
-            'token_type' => 'Bearer',
             'user' => $user,
-        ]);
+        ], 200);
     }
 
     public function me(Request $request)
@@ -68,7 +66,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'user' => $request->user(),
-        ]);
+        ], 200);
     }
 
     public function logout(Request $request)
@@ -78,6 +76,6 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Logout berhasil',
-        ]);
+        ], 200);
     }
 }
