@@ -1,13 +1,20 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SiswaController;
+use Illuminate\Support\Facades\Route;
 
-// Route untuk ngetes saja
 Route::get('/ping', function () {
     return response()->json(['message' => 'pong']);
 });
 
-// Route utama untuk Roster Siswa
-Route::get('/siswa', [SiswaController::class, 'index']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Route lama tetap dipertahankan, tapi sekarang butuh token login.
+    Route::get('/siswa', [SiswaController::class, 'index']);
+});
