@@ -1,17 +1,41 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SiswaController;
 use App\Http\Controllers\Api\GalleryController;
+use Illuminate\Support\Facades\Route;
 
-// Route untuk ngetes saja
 Route::get('/ping', function () {
-    return response()->json(['message' => 'pong']);
+    return response()->json([
+        'message' => 'pong'
+    ]);
 });
 
-// Route utama untuk Roster Siswa
-Route::get('/siswa', [SiswaController::class, 'index']);
+/*
+|--------------------------------------------------------------------------
+| Auth Routes
+|--------------------------------------------------------------------------
+| Register dan login tidak butuh token.
+*/
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
-Route::get('/gallery', [GalleryController::class, 'index']);
-Route::post('/gallery', [GalleryController::class, 'store']);
+/*
+|--------------------------------------------------------------------------
+| Protected Routes
+|--------------------------------------------------------------------------
+| Route di dalam sini butuh token Sanctum.
+*/
+Route::middleware('auth:sanctum')->group(function () {
+    // Profil User
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Data Siswa
+    Route::get('/siswa', [SiswaController::class, 'index']);
+    Route::get('/siswa/{id}', [SiswaController::class, 'show']); // Untuk detail siswa (No 6 di foto)
+
+    // Gallery Kenangan
+    Route::get('/gallery', [GalleryController::class, 'index']);
+    Route::post('/gallery', [GalleryController::class, 'store']);
+});
