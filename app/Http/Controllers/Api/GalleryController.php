@@ -12,7 +12,9 @@ class GalleryController extends Controller
     // Lihat semua foto gallery
     public function index()
     {
-        $galleries = Gallery::with('user:id,nama')->latest()->get();
+        // Catatan: Pastikan di Model User kolomnya 'name' atau 'nama' 
+        // Kalau tadi di migration adalah 'name', ganti 'nama' jadi 'name' di bawah ini
+        $galleries = Gallery::with('user:id,name')->latest()->get();
         return response()->json([
             'success' => true,
             'data'    => $galleries
@@ -25,7 +27,7 @@ class GalleryController extends Controller
         $request->validate([
             'image'   => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'caption' => 'nullable|string',
-            'user_id' => 'required' // Nanti ini otomatis kalau sudah ada sistem Login
+            // 'user_id' => 'required'  <-- HAPUS INI, karena kita ambil dari token
         ]);
 
         // Proses simpan gambar
@@ -33,7 +35,8 @@ class GalleryController extends Controller
         $image->storeAs('public/gallery', $image->hashName());
 
         $gallery = Gallery::create([
-            'user_id' => $request->user_id,
+            // AMBIL ID OTOMATIS DARI USER YANG LOGIN
+            'user_id' => auth()->id(), 
             'image'   => $image->hashName(),
             'caption' => $request->caption,
         ]);
