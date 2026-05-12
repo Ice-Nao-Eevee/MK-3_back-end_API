@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa; // Pastikan Model Siswa sudah dibuat ya
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SiswaController extends Controller
 {
@@ -23,6 +24,48 @@ class SiswaController extends Controller
             'success' => true,
             'message' => 'Data Siswa XI PPLG 4',
             'data'    => $siswa
+        ], 200);
+    }
+
+    public function update(Request $request, $id)
+    {
+        if ($request->user()->role !== 'wali_kelas') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya wali kelas yang dapat mengubah data siswa.',
+            ], 403);
+        }
+
+        $siswa = Siswa::find($id);
+
+        if (!$siswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data siswa tidak ditemukan.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'no_absen' => 'sometimes|nullable|integer|min:1',
+            'nis' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('siswas', 'nis')->ignore($siswa->id),
+            ],
+            'nama' => 'sometimes|required|string|max:255',
+            'jenis_kelamin' => 'sometimes|nullable|in:L,P',
+            'jabatan_dev' => 'sometimes|nullable|string|max:255',
+            'foto' => 'sometimes|nullable|string|max:255',
+        ]);
+
+        $siswa->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data siswa berhasil diubah.',
+            'data' => $siswa,
         ], 200);
     }
 }

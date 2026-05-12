@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Data Siswa
     Route::get('/siswa', [SiswaController::class, 'index']);
     Route::get('/siswa/{id}', [SiswaController::class, 'show']); // Untuk detail siswa (No 6 di foto)
+    Route::put('/students/{id}', [SiswaController::class, 'update']); // Edit data siswa (No 7 di foto)
 
     // Gallery Kenangan
     Route::get('/gallery', [GalleryController::class, 'index']);
