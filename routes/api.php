@@ -39,4 +39,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Gallery Kenangan
     Route::get('/gallery', [GalleryController::class, 'index']);
     Route::post('/gallery', [GalleryController::class, 'store']);
+    Route::delete('/gallery/{id}', [GalleryController::class, 'destroy']);
 });
