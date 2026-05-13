@@ -9,9 +9,13 @@ use Illuminate\Support\Facades\Http;
 
 class GalleryController extends Controller
 {
-    // Lihat semua foto gallery
+    /**
+     * FUNGSI INDEX: Mengambil semua data foto
+     */
     public function index()
     {
+        // Mengambil data gallery beserta informasi user (id & nama) yang upload
+        // latest() digunakan agar foto terbaru muncul di paling atas
         $galleries = Gallery::with('user:id,name')->latest()->get();
 
         return response()->json([
@@ -20,9 +24,12 @@ class GalleryController extends Controller
         ]);
     }
 
-    // Upload foto ke Cloudinary
+    /**
+     * FUNGSI STORE: Proses upload foto ke Cloudinary dan simpan ke database
+     */
     public function store(Request $request)
     {
+        // 1. Validasi input: File harus gambar, format tertentu, dan maksimal 2MB
         $request->validate([
             'image'   => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'caption' => 'nullable|string',
@@ -30,27 +37,34 @@ class GalleryController extends Controller
 
         try {
             $data = [];
+            // Mengambil ID user yang sedang login untuk dicatat sebagai pemilik foto
             $data['user_id'] = auth()->id();
 
+            // 2. Cek apakah ada file gambar yang dikirim
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
 
+                // Mengambil kredensial API Cloudinary dari file .env
                 $cloudName = env('CLOUDINARY_CLOUD_NAME');
                 $apiKey = env('CLOUDINARY_API_KEY');
                 $apiSecret = env('CLOUDINARY_API_SECRET');
 
+                // 3. Proses Pengiriman (Upload) ke API Cloudinary
                 $response = Http::asMultipart()
-                    ->withBasicAuth($apiKey, $apiSecret)
+                    ->withBasicAuth($apiKey, $apiSecret) // Autentikasi API
                     ->post(
                         "https://api.cloudinary.com/v1_1/{$cloudName}/image/upload",
                         [
-                            'file' => fopen($file->getRealPath(), 'r'),
-                            'folder' => 'gallery',
+                            'file' => fopen($file->getRealPath(), 'r'), // Membuka file gambar
+                            'folder' => 'gallery', // Nama folder di dashboard Cloudinary
                         ],
                     );
 
+                // 4. Jika upload ke Cloudinary berhasil
                 if ($response->successful()) {
+                    // Ambil URL foto yang aman (HTTPS) dari respon Cloudinary
                     $data['image'] = $response->json()['secure_url'];
+                    // Ambil Public ID untuk keperluan hapus foto nantinya
                     $data['public_id'] = $response->json()['public_id'];
                 } else {
                     return response()->json([
@@ -66,8 +80,8 @@ class GalleryController extends Controller
                 ], 400);
             }
 
+            // 5. Simpan caption dan data lainnya ke database lokal
             $data['caption'] = $request->caption;
-
             $gallery = Gallery::create($data);
 
             return response()->json([
@@ -75,7 +89,9 @@ class GalleryController extends Controller
                 'message' => 'Foto berhasil diupload!',
                 'data'    => $gallery
             ], 201);
+
         } catch (\Exception $e) {
+            // Menangkap error jika terjadi kegagalan sistem
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -83,9 +99,12 @@ class GalleryController extends Controller
         }
     }
 
-    // Hapus foto dari Cloudinary dan database
+    /**
+     * FUNGSI DESTROY: Menghapus foto dari Cloudinary dan Database lokal
+     */
     public function destroy($id)
     {
+        // 1. Cari data foto berdasarkan ID
         $gallery = Gallery::find($id);
 
         if (!$gallery) {
@@ -95,7 +114,7 @@ class GalleryController extends Controller
             ], 404);
         }
 
-        // Cek ownership
+        // 2. CEK KEAMANAN: Pastikan yang menghapus adalah pemilik foto tersebut
         if ($gallery->user_id !== auth()->id()) {
             return response()->json([
                 'success' => false,
@@ -104,12 +123,13 @@ class GalleryController extends Controller
         }
 
         try {
-            // Hapus dari Cloudinary
+            // 3. Proses Hapus file fisik di Cloudinary
             if ($gallery->public_id) {
                 $cloudName = env('CLOUDINARY_CLOUD_NAME');
                 $apiKey = env('CLOUDINARY_API_KEY');
                 $apiSecret = env('CLOUDINARY_API_SECRET');
 
+                // Meminta Cloudinary menghapus file berdasarkan public_id
                 Http::asMultipart()
                     ->withBasicAuth($apiKey, $apiSecret)
                     ->delete(
@@ -118,7 +138,7 @@ class GalleryController extends Controller
                     );
             }
 
-            // Hapus dari database
+            // 4. Hapus record data dari database lokal
             $gallery->delete();
 
             return response()->json([
