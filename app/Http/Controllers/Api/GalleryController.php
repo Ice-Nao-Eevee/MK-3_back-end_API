@@ -31,7 +31,7 @@ class GalleryController extends Controller
     {
         // 1. Validasi input: File harus gambar, format tertentu, dan maksimal 2MB
         $request->validate([
-            'image'   => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image'   => 'required|image|mimes:jpeg,png,jpg,gif',
             'caption' => 'nullable|string',
         ]);
 
