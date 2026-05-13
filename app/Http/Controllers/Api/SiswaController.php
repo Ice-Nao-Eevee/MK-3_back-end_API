@@ -27,6 +27,24 @@ class SiswaController extends Controller
         ], 200);
     }
 
+    public function show($id)
+    {
+        $siswa = Siswa::find($id);
+
+        if (!$siswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data siswa tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail data siswa.',
+            'data' => $siswa,
+        ], 200);
+    }
+
     public function update(Request $request, $id)
     {
         if ($request->user()->role !== 'wali_kelas') {
