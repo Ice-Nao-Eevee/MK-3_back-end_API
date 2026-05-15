@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gallery;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
 class GalleryController extends Controller
@@ -26,6 +28,8 @@ class GalleryController extends Controller
 
     /**
      * FUNGSI STORE: Proses upload foto ke Cloudinary dan simpan ke database
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -38,7 +42,9 @@ class GalleryController extends Controller
         try {
             $data = [];
             // Mengambil ID user yang sedang login untuk dicatat sebagai pemilik foto
-            $data['user_id'] = auth()->id();
+            /** @var User|null $user */
+            $user = $request->user();
+            $data['user_id'] = $user?->id;
 
             // 2. Cek apakah ada file gambar yang dikirim
             if ($request->hasFile('image')) {
@@ -101,10 +107,13 @@ class GalleryController extends Controller
 
     /**
      * FUNGSI DESTROY: Menghapus foto dari Cloudinary dan Database lokal
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {
         // 1. Cari data foto berdasarkan ID
+        /** @var Gallery|null $gallery */
         $gallery = Gallery::find($id);
 
         if (!$gallery) {
@@ -115,7 +124,9 @@ class GalleryController extends Controller
         }
 
         // 2. CEK KEAMANAN: Pastikan yang menghapus adalah pemilik foto tersebut
-        if ($gallery->user_id !== auth()->id()) {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if ($gallery->user_id !== $user?->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak berhak menghapus foto ini'

@@ -4,6 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Siswa when($value, $callback = null, $default = null)
+ * @method static \App\Models\Siswa|null find($id, $columns = ['*'])
+ */
 class Siswa extends Model
 {
     protected $fillable = [
@@ -14,4 +19,6 @@ class Siswa extends Model
         'jabatan_dev',
         'foto',
     ];
+
+    protected $table = 'siswas';
 }
