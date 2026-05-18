@@ -14,10 +14,14 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            // MODIFIKASI: Tambah NIS khusus PPLG 4, set nullable biar akun walas/umum ga wajib isi
+            $table->string('nis')->unique()->nullable(); 
+            // MODIFIKASI: Ubah email jadi nullable biar anak PPLG 4 bisa login murni pake NIS tanpa email
+            $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['siswa', 'wali_kelas'])->default('siswa');
+            // MODIFIKASI: Role disesuaikan dengan kebutuhan lo (Wali kelas, Anak PPLG 4, Orang Luar/Umum)
+            $table->enum('role', ['wali_kelas', 'siswa_pplg4', 'umum'])->default('umum');
             $table->rememberToken();
             $table->timestamps();
         });
