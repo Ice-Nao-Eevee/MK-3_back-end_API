@@ -10,44 +10,51 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    // Fungsi Register khusus untuk Orang Lain / Umum (Strict .com/.id dll)
     public function register(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users,email',
+            // Pake email:rfc,dns biar wajib ada TLD valid (.com/.id/dll) & terdaftar di internet
+            'email' => 'required|string|email:rfc,dns|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'nullable|in:siswa,wali_kelas',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => $validated['password'],
-            'role' => $validated['role'] ?? 'siswa',
+            'nis' => null, // Akun umum tidak punya NIS
+            'password' => Hash::make($validated['password']),
+            'role' => 'umum', 
         ]);
 
         $token = $user->createToken('android-token')->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'Register berhasil',
+            'message' => 'Register akun umum berhasil',
             'token' => $token,
             'user' => $user,
         ], 201);
     }
 
+    // Fungsi Login Dinamis (Mendeteksi Email Asli atau NIS)
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|string|email',
+            'login_input' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
+        // Diproteksi FILTER_VALIDATE_EMAIL
+        // Kalau ga lolos validasi email (seperti gapake .com), otomatis dibaca sebagai NIS
+        $fieldType = filter_var($validated['login_input'], FILTER_VALIDATE_EMAIL) ? 'email' : 'nis';
+
+        $user = User::where($fieldType, $validated['login_input'])->first();
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Email atau password salah.'],
+                'login_input' => ['NIS atau Email/Password yang kamu masukkan salah.'],
             ]);
         }
 
@@ -57,7 +64,13 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Login berhasil',
             'token' => $token,
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'nis' => $user->nis,
+                'role' => $user->role,
+            ],
         ], 200);
     }
 
