@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Gallery when($value, $callback = null, $default = null)
+ * @method static \App\Models\Gallery|null find($id, $columns = ['*'])
+ * @method bool|int|null delete()
+ */
 class Gallery extends Model
 {
     // 1. FILLABLE: Daftar kolom yang diizinkan untuk diisi secara massal (mass assignment)
