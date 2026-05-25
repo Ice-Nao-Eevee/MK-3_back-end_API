@@ -24,9 +24,10 @@ class DatabaseSeeder extends Seeder
             'role'     => 'wali_kelas',
         ]);
 
-        // 2. Jalankan Seeder Siswa (Data terbaru dari Main/Temanmu)
+        // 2. Jalankan Semua Seeder (Digabung jadi satu array di sini su!)
         $this->call([
-            SiswaKelasSeeder::class,
+            UserSeeder::class,         // 👈 Akun role lainnya dari UserSeeder lu
+            SiswaKelasSeeder::class,   // 👈 Data siswa terbaru dari temenmu
         ]);
     }
 }
