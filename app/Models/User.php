@@ -15,6 +15,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'nis', // 🛠️ MODIFIKASI: Tambahkan kolom 'nis' agar bisa diisi saat registrasi
     ];
 
     protected $hidden = [
