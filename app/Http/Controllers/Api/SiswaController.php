@@ -96,21 +96,35 @@ class SiswaController extends Controller
             $apiKey = env('CLOUDINARY_API_KEY');
             $apiSecret = env('CLOUDINARY_API_SECRET');
 
-            // Kirim file foto profil ke Cloudinary masuk ke folder 'profile_siswa'
-            $response = Http::asMultipart()
-                ->withBasicAuth($apiKey, $apiSecret)
-                ->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
-                    'file' => fopen($file->getRealPath(), 'r'),
-                    'folder' => 'profile_siswa', 
-                ]);
+            // Persiapan data untuk Signed Upload Cloudinary
+            $timestamp = time();
+            $folder = 'profile_siswa';
+            
+            // String to sign WAJIB urut abjad: f (folder) lalu t (timestamp)
+            $signature = sha1("folder={$folder}&timestamp={$timestamp}" . $apiSecret);
+
+            // Kirim file foto profil ke Cloudinary dengan metode Signed Upload
+            $response = Http::attach(
+                'file', 
+                file_get_contents($file->getRealPath()), 
+                $file->getClientOriginalName()
+            )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
+                'folder'    => $folder,
+                'api_key'   => $apiKey,
+                'timestamp' => $timestamp,
+                'signature' => $signature,
+            ]);
 
             if ($response->successful()) {
                 // Ambil secure_url (HTTPS) dari Cloudinary, masukkan ke array validated kolom 'foto'
                 $validated['foto'] = $response->json()['secure_url'];
             } else {
+                // Biar ketahuan error asli dari Cloudinary-nya apa
+                $cloudinaryError = isset($response->json()['error']['message']) ? $response->json()['error']['message'] : 'Cek .env kamu';
+                
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal upload foto profil ke Cloudinary.',
+                    'message' => 'Gagal upload ke Cloudinary: ' . $cloudinaryError,
                     'detail' => $response->json()
                 ], 500);
             }
