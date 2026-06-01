@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+// 🔴 TAMBAHAN: Import class BelongsTo untuk relasi database
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Classroom; // 🔴 SUNTIK INI BIAR KAGAK NOT FOUND LAGI CONG!
 
 class User extends Authenticatable
 {
@@ -15,7 +18,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'nis', // 🛠️ MODIFIKASI: Tambahkan kolom 'nis' agar bisa diisi saat registrasi
+        'nis', 
+        'classroom_id', // 🔴 FIX: Wajib masukin ini biar data ID kelas bisa disimpan ke database su!
     ];
 
     protected $hidden = [
@@ -28,5 +32,14 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * 🔴 MODIFIKASI: Relasi ke Master Kelas (Classroom)
+     * Hubungan darah: Satu User (Siswa/Walas) memiliki satu Kelas
+     */
+    public function classroom(): BelongsTo
+    {
+        return $this->belongsTo(Classroom::class, 'classroom_id');
     }
 }

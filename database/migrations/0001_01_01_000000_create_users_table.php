@@ -14,18 +14,23 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            // MODIFIKASI: Tambah NIS khusus PPLG 4, set nullable biar akun walas/umum ga wajib isi
             $table->string('nis')->unique()->nullable(); 
-            // MODIFIKASI: Ubah email jadi nullable biar anak PPLG 4 bisa login murni pake NIS tanpa email
             $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            // MODIFIKASI: Role disesuaikan dengan kebutuhan lo (Wali kelas, Anak PPLG 4, Orang Luar/Umum)
-            $table->enum('role', ['wali_kelas', 'siswa_pplg4', 'umum'])->default('umum');
+            
+            // 🔴 MODIFIKASI TERBARU SKALA SEKOLAH:
+            // Role diubah menjadi umum: wali_kelas, siswa, atau admin_sekolah
+            $table->enum('role', ['admin_sekolah', 'wali_kelas', 'siswa', 'umum'])->default('umum');
+            
+            // Menghubungkan akun ke ID kelasnya (Nullable karena akun umum/admin tidak punya kelas)
+            $table->foreignId('classroom_id')->nullable()->constrained('classrooms')->onDelete('set null');
+
             $table->rememberToken();
             $table->timestamps();
         });
 
+        // Bagian password_reset_tokens dan sessions biarkan tetap seperti kode aslimu su...
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');

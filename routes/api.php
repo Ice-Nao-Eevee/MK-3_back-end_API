@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SiswaController;
 use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\ClassroomController; // 🔴 SUNTIKAN 1: Import Controller Kelas Baru Lu
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
@@ -13,12 +14,16 @@ Route::get('/ping', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Auth Routes
+| Auth & Public Master Routes
 |--------------------------------------------------------------------------
-| Register dan login tidak butuh token.
+| Register, login, dan master kelas tidak butuh token.
 */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// 🔴 SUNTIKAN 2: Endpoint buat narik list 35 kelas (Bisa difilter ?jurusan=PPLG atau ?tingkat=XI)
+Route::get('/classrooms', [ClassroomController::class, 'index']);
+
 
 /*
 |--------------------------------------------------------------------------

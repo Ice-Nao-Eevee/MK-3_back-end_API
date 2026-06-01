@@ -10,12 +10,11 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // Fungsi Register khusus untuk Orang Lain / Umum (Strict .com/.id dll)
+    // Fungsi Register khusus untuk Orang Lain / Umum
     public function register(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            // Pake email:rfc,dns biar wajib ada TLD valid (.com/.id/dll) & terdaftar di internet
             'email' => 'required|string|email:rfc,dns|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -23,9 +22,10 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'nis' => null, // Akun umum tidak punya NIS
+            'nis' => null, 
             'password' => Hash::make($validated['password']),
             'role' => 'umum', 
+            'classroom_id' => null, // Akun umum tidak punya kelas cong
         ]);
 
         $token = $user->createToken('android-token')->plainTextToken;
@@ -34,11 +34,18 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Register akun umum berhasil',
             'token' => $token,
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'nis' => $user->nis,
+                'role' => $user->role,
+                'classroom' => null // Akun umum otomatis null kelasnya
+            ],
         ], 201);
     }
 
-    // Fungsi Login Dinamis (Mendeteksi Email Asli atau NIS)
+    // Fungsi Login Dinamis (Mendeteksi Email Asli atau NIS + Angkut Data Kelas)
     public function login(Request $request)
     {
         $validated = $request->validate([
@@ -46,11 +53,11 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Diproteksi FILTER_VALIDATE_EMAIL
-        // Kalau ga lolos validasi email (seperti gapake .com), otomatis dibaca sebagai NIS
+        // Logika cerdas lu tetep kejaga su!
         $fieldType = filter_var($validated['login_input'], FILTER_VALIDATE_EMAIL) ? 'email' : 'nis';
 
-        $user = User::where($fieldType, $validated['login_input'])->first();
+        // 🔴 MODIFIKASI: Tambah Eager Loading .with('classroom') biar data kelas ikut kebawa
+        $user = User::with('classroom')->where($fieldType, $validated['login_input'])->first();
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
@@ -70,15 +77,38 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'nis' => $user->nis,
                 'role' => $user->role,
+                // 🔴 MODIFIKASI: Kondisi ngecek apakah dia punya kelas atau kagak
+                'classroom' => $user->classroom ? [
+                    'id' => $user->classroom->id,
+                    'tingkat' => $user->classroom->tingkat,
+                    'jurusan' => $user->classroom->jurusan,
+                    'nama_kelas' => $user->classroom->nama_kelas,
+                ] : null
             ],
         ], 200);
     }
 
+    // Fungsi cek profil login sekalian bawa detail kelasnya cong
     public function me(Request $request)
     {
+        // Ambil data user yang sedang login beserta relasi kelasnya
+        $user = User::with('classroom')->find($request->user()->id);
+
         return response()->json([
             'success' => true,
-            'user' => $request->user(),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'nis' => $user->nis,
+                'role' => $user->role,
+                'classroom' => $user->classroom ? [
+                    'id' => $user->classroom->id,
+                    'tingkat' => $user->classroom->tingkat,
+                    'jurusan' => $user->classroom->jurusan,
+                    'nama_kelas' => $user->classroom->nama_kelas,
+                ] : null
+            ],
         ], 200);
     }
 

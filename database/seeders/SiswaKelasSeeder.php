@@ -14,6 +14,9 @@ class SiswaKelasSeeder extends Seeder
         // 1. Kosongkan tabel siswas bawaan sebelum di-isi ulang
         DB::table('siswas')->truncate();
 
+        // 💡 KUNCI ID KELAS XI PPLG 4 (Di database kita otomatis ID-nya 15, cong!)
+        $classroomId = 15;
+
         // 2. Data Master 34 Siswa XI PPLG 4
         $siswas = [
             ['no_absen' => 1, 'nis' => '541241001', 'nama' => 'ABSARI BEKTI SYAHFITRI', 'jenis_kelamin' => 'P'],
@@ -53,8 +56,22 @@ class SiswaKelasSeeder extends Seeder
         ];
 
         foreach ($siswas as $siswa) {
+            // B. Otomatis bikinin Akun Login di tabel 'users' dulu biar dapet ID-nya cong
+            $user = User::updateOrCreate(
+                ['nis' => $siswa['nis']], // Cek biar ga duplikat berdasarkan NIS
+                [
+                    'name' => $siswa['nama'],
+                    'email' => null, 
+                    'password' => Hash::make($siswa['nis']), // Password default pake NIS
+                    'role' => 'siswa', // 🔴 FIX: Role disesuaikan skala sekolah
+                    'classroom_id' => $classroomId, // 🔴 FIX: Pasang ID Kelas XI PPLG 4
+                ]
+            );
+
             // A. Suntik ke tabel 'siswas' buat biodata gallery/kelas
             DB::table('siswas')->insert([
+                'user_id' => $user->id, // Hubungkan langsung dengan id akunnya
+                'classroom_id' => $classroomId, // 🔴 FIX: Pasang ID Kelas XI PPLG 4
                 'no_absen' => $siswa['no_absen'],
                 'nis' => $siswa['nis'],
                 'nama' => $siswa['nama'],
@@ -64,17 +81,6 @@ class SiswaKelasSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
-
-            // B. Otomatis bikinin Akun Login di tabel 'users' biar ga kerja 2 kali
-            User::updateOrCreate(
-                ['nis' => $siswa['nis']], // Cek biar ga duplikat berdasarkan NIS
-                [
-                    'name' => $siswa['nama'],
-                    'email' => null, // Anak kelas login murni pake NIS
-                    'password' => Hash::make($siswa['nis']), // Password default disamain ama NIS masing-masing
-                    'role' => 'siswa_pplg4',
-                ]
-            );
         }
     }
 }
