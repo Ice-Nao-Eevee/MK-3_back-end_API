@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Siswa; 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Http; // 👈 WAJIB DITAMBAH: Untuk nembak API Cloudinary
+use Illuminate\Support\Facades\Http; // Untuk nembak API Cloudinary
 
 class SiswaController extends Controller
 {
@@ -15,22 +15,23 @@ class SiswaController extends Controller
         // Ambil input 'search' dari URL
         $search = $request->query('search');
 
-        // Query ke tabel siswa dengan penulisan yang lebih eksplisit
-        $siswa = Siswa::when($search, function ($query) use ($search) {
+        // 🔴 MODIFIKASI SAKTI: Tambah with('classroom') biar Android bisa baca nama kelas secara dinamis
+        $siswa = Siswa::with('classroom')->when($search, function ($query) use ($search) {
             return $query->where('nama', 'LIKE', '%' . $search . '%')
                          ->orWhere('nis', 'LIKE', '%' . $search . '%');
         })->get();
 
         return response()->json([
             'success' => true,
-            'message' => 'Data Siswa XI PPLG 4',
+            'message' => 'Daftar semua data siswa berhasil dimuat, su!',
             'data'    => $siswa
         ], 200);
     }
 
     public function show($id)
     {
-        $siswa = Siswa::find($id);
+        // 🔴 MODIFIKASI SAKTI: Tambah dengan relasi kelas juga biar detail siswa di Android makin lengkap
+        $siswa = Siswa::with('classroom')->find($id);
 
         if (!$siswa) {
             return response()->json([
@@ -48,7 +49,7 @@ class SiswaController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Proteksi: Hanya Akun dengan Role wali_kelas yang bisa tembus edit
+        // Proteksi 1: Hanya Akun dengan Role wali_kelas yang bisa tembus edit
         if ($request->user()->role !== 'wali_kelas') {
             return response()->json([
                 'success' => false,
@@ -65,7 +66,16 @@ class SiswaController extends Controller
             ], 404);
         }
 
-        // 🛠️ VALIDASI SAKTI: Kita ubah aturan 'foto' agar menerima FILE gambar asli dari Android
+        // 🔴 PROTEKSI GANDA SAKTI: Kunci Wali Kelas agar CUMA bisa ngedit anak didiknya sendiri!
+        // Membandingkan classroom_id milik Walas yang login dengan milik si Siswa
+        if ($request->user()->classroom_id !== $siswa->classroom_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ngapain lu su? Ini bukan anak didik di kelas lu! 🙅‍♂️❌',
+            ], 403);
+        }
+
+        // VALIDASI SAKTI: Aturan 'foto' menerima FILE gambar asli dari Android
         $validated = $request->validate([
             'no_absen'      => 'sometimes|nullable|integer|min:1',
             'nis'           => [
@@ -77,10 +87,10 @@ class SiswaController extends Controller
             ],
             'nama'          => 'sometimes|required|string|max:255',
             'jenis_kelamin' => 'sometimes|nullable|in:L,P',
-            'jabatan_dev' => 'sometimes|nullable|string|max:255',
+            'jabatan_dev'   => 'sometimes|nullable|string|max:255',
             
-            // MODIFIKASI: Menerima file image, maksimal 2MB
-            'foto' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
+            // Menerima file image, maksimal 2MB
+            'foto'          => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
             
             'tanggal_lahir' => 'sometimes|nullable|string|max:255',
             'whatsapp'      => 'sometimes|nullable|string|max:20',
@@ -89,7 +99,7 @@ class SiswaController extends Controller
             'quote'         => 'sometimes|nullable|string',
         ]);
 
-        // 🛠️ MODIFIKASI SAKTI: LOGIKA UPLOAD FOTO PROFIL KE CLOUDINARY
+        // LOGIKA UPLOAD FOTO PROFIL KE CLOUDINARY
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
             $cloudName = env('CLOUDINARY_CLOUD_NAME');
@@ -119,7 +129,6 @@ class SiswaController extends Controller
                 // Ambil secure_url (HTTPS) dari Cloudinary, masukkan ke array validated kolom 'foto'
                 $validated['foto'] = $response->json()['secure_url'];
             } else {
-                // Biar ketahuan error asli dari Cloudinary-nya apa
                 $cloudinaryError = isset($response->json()['error']['message']) ? $response->json()['error']['message'] : 'Cek .env kamu';
                 
                 return response()->json([
