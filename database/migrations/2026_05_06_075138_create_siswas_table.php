@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('nis')->unique();
             $table->string('nama');
-            $table->string('jabatan_dev')->default('Student'); // Contoh: Android Dev
-            $table->string('foto')->nullable(); // Simpan nama file gambar
+            $table->string('jabatan_dev')->default('Student');
+            $table->string('foto')->nullable();
             $table->timestamps();
         });
     }

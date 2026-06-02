@@ -12,18 +12,23 @@ class SiswaController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil input 'search' dari URL
         $search = $request->query('search');
+        $classroomId = $request->query('classroom_id'); 
 
-        // 🔴 MODIFIKASI SAKTI: Tambah with('classroom') biar Android bisa baca nama kelas secara dinamis
-        $siswa = Siswa::with('classroom')->when($search, function ($query) use ($search) {
-            return $query->where('nama', 'LIKE', '%' . $search . '%')
-                         ->orWhere('nis', 'LIKE', '%' . $search . '%');
-        })->get();
+        // 🟢 KITA HAPUS ".with('classroom')" BIAR STRUKTUR JSON-NYA RINGAN DAN SAMA KAYAK DULU
+        $siswa = Siswa::when($classroomId, function ($query) use ($classroomId) {
+                return $query->where('classroom_id', $classroomId);
+            })
+            ->when($search, function ($query) use ($search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('nama', 'LIKE', '%' . $search . '%')
+                    ->orWhere('nis', 'LIKE', '%' . $search . '%');
+                });
+            })->get();
 
         return response()->json([
             'success' => true,
-            'message' => 'Daftar semua data siswa berhasil dimuat, su!',
+            'message' => 'Daftar data siswa berhasil dimuat, su!',
             'data'    => $siswa
         ], 200);
     }

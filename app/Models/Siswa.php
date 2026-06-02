@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -11,19 +12,32 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Siswa extends Model
 {
-    // 🛠️ MODIFIKASI: Daftarkan semua kolom baru agar diizinkan masuk ke database MySQL
+    use HasFactory;
+
+    // 🛠️ Daftarkan semua kolom baru agar diizinkan masuk ke database MySQL
     protected $fillable = [
-    'no_absen',
-    'nis',
-    'nama',
-    'jenis_kelamin',
-    'jabatan_dev',
-    'foto',             // Ini nanti bakal nyimpen URL secure_url dari Cloudinary
-    'profile_public_id', // 👈 Tambahin ini di model & di database lewat phpMyAdmin jika diperlukan, atau jadikan satu fungsi mandiri
-    'tanggal_lahir',
-    'whatsapp',
-    'instagram',
-    'bio',
-    'quote',
-];
+        'classroom_id', // 👈 WAJIB MASUKIN INI JUGA BIAR RELASI KELASNYA GAK GAGAL DI-UPDATE!
+        'no_absen',
+        'nis',
+        'nama',
+        'jenis_kelamin',
+        'jabatan_dev',
+        'foto',              // Menyimpan URL secure_url dari Cloudinary
+        'profile_public_id', 
+        'tanggal_lahir',
+        'whatsapp',
+        'instagram',
+        'bio',
+        'quote',
+    ];
+
+    // ── 🔴 SUNTIKAN RELASI SAKTI: HUBUNGKAN STRUKTUR KE TABEL CLASSROOMS ──
+    public function classroom()
+    {
+        // Menghubungkan kolom classroom_id di tabel siswas ke id di tabel classrooms
+        return $this->belongsTo(Classroom::class, 'classroom_id')->withDefault([
+            'id' => 0,
+            'nama_kelas' => 'Belum Pilih Kelas' // Antisipasi aman biar gak pemicu eror null pointer 
+        ]);
+    }
 }
