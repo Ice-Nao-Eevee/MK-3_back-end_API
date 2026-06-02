@@ -10,65 +10,30 @@ class ClassroomSeeder extends Seeder
 {
     public function run(): void
     {
-        // Matikan foreign key check biar aman dari amukan MySQL
         Schema::disableForeignKeyConstraints();
-        
         DB::table('classrooms')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $classrooms = [];
 
-        // ==================== KELAS X ====================
-        for ($i = 1; $i <= 6; $i++) {
-            $classrooms[] = [
-                'nama_kelas' => 'X PPLG ' . $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-        for ($i = 1; $i <= 5; $i++) {
-            $classrooms[] = [
-                'nama_kelas' => 'X TJKT ' . $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+        foreach (['X', 'XI', 'XII'] as $tingkat) {
+            foreach (['PPLG', 'TJKT'] as $jurusan) {
+                $max = $jurusan === 'PPLG' ? ($tingkat === 'X' ? 6 : 7) : 5;
+
+                for ($i = 1; $i <= $max; $i++) {
+                    $classrooms[] = [
+                        'tingkat' => $tingkat,
+                        'jurusan' => $jurusan,
+                        'nomor_kelas' => $i,
+                        'nama_kelas' => "{$tingkat} {$jurusan} {$i}",
+                        'is_active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
         }
 
-        // ==================== KELAS XI ====================
-        for ($i = 1; $i <= 7; $i++) {
-            $classrooms[] = [
-                'nama_kelas' => 'XI PPLG ' . $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-        for ($i = 1; $i <= 5; $i++) {
-            $classrooms[] = [
-                'nama_kelas' => 'XI TJKT ' . $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-
-        // ==================== KELAS XII ====================
-        for ($i = 1; $i <= 7; $i++) {
-            $classrooms[] = [
-                'nama_kelas' => 'XII PPLG ' . $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-        for ($i = 1; $i <= 5; $i++) {
-            $classrooms[] = [
-                'nama_kelas' => 'XII TJKT ' . $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-
-        // Masukkan semua data kelas ke database (Urutan ID dijamin tetep sama su!)
         DB::table('classrooms')->insert($classrooms);
-
-        // Nyalain lagi sensor pengamannya
-        Schema::enableForeignKeyConstraints();
     }
 }

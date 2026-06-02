@@ -7,6 +7,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 // 🔴 TAMBAHAN: Import class BelongsTo untuk relasi database
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Classroom; // 🔴 SUNTIK INI BIAR KAGAK NOT FOUND LAGI CONG!
 
 class User extends Authenticatable
@@ -41,5 +42,10 @@ class User extends Authenticatable
     public function classroom(): BelongsTo
     {
         return $this->belongsTo(Classroom::class, 'classroom_id');
+    }
+
+    public function siswa(): HasOne
+    {
+        return $this->hasOne(Siswa::class, 'user_id');
     }
 }

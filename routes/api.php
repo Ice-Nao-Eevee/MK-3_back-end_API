@@ -1,51 +1,45 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\SiswaController;
+use App\Http\Controllers\Api\ClassroomController;
 use App\Http\Controllers\Api\GalleryController;
-use App\Http\Controllers\Api\ClassroomController; // 🔴 SUNTIKAN 1: Import Controller Kelas Baru Lu
+use App\Http\Controllers\Api\ScheduleController;
+use App\Http\Controllers\Api\SiswaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
     return response()->json([
-        'message' => 'pong'
+        'message' => 'pong',
     ]);
 });
 
 /*
 |--------------------------------------------------------------------------
-| Auth & Public Master Routes
+| Public API
 |--------------------------------------------------------------------------
-| Register, login, master kelas, dan list siswa tidak butuh token (PUBLIC).
+| Dibuat public supaya Android mudah demo: login, register, master kelas,
+| list siswa, dan jadwal berjalan bisa dibaca tanpa ribet token.
 */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
-// 🔴 SUNTIKAN 2: Endpoint buat narik list 35 kelas (Bisa difilter ?jurusan=PPLG atau ?tingkat=XI)
 Route::get('/classrooms', [ClassroomController::class, 'index']);
-
-// 🟢 BYPASS SAKTI: Kita pindahin ke sini biar Chrome & HP bisa akses bebas tanpa token hangus!
 Route::get('/siswa', [SiswaController::class, 'index']);
-
+Route::get('/jadwal', [ScheduleController::class, 'index']);
+Route::get('/jadwal/sekarang', [ScheduleController::class, 'current']);
 
 /*
 |--------------------------------------------------------------------------
-| Protected Routes
+| Protected API
 |--------------------------------------------------------------------------
-| Route di dalam sini tetep butuh token Sanctum (Fitur Edit & Private).
+| Bagian edit/private tetap pakai Sanctum.
 */
 Route::middleware('auth:sanctum')->group(function () {
-    // Profil User
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Detail Siswa tetep dijaga
-    Route::get('/siswa/{id}', [SiswaController::class, 'show']); 
-    
-    // 🛠️ MODIFIKASI SAKTI: Edit data siswa WAJIB pake token dan tetep dikunci walasnya!
-    Route::post('/siswa/update/{id}', [SiswaController::class, 'update']); 
+    Route::get('/siswa/{id}', [SiswaController::class, 'show']);
+    Route::post('/siswa/update/{id}', [SiswaController::class, 'update']);
 
-    // Gallery Kenangan
     Route::get('/gallery', [GalleryController::class, 'index']);
     Route::post('/gallery', [GalleryController::class, 'store']);
     Route::delete('/gallery/{id}', [GalleryController::class, 'destroy']);

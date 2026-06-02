@@ -2,22 +2,28 @@
 
 namespace Database\Seeders;
 
+use App\Models\Classroom;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class SiswaKelasSeeder extends Seeder
 {
+    private array $ayahNames = [
+        'Budi Santoso', 'Agus Prasetyo', 'Rudi Hartono', 'Dedi Kurniawan', 'Hendra Wijaya',
+        'Slamet Riyadi', 'Eko Saputra', 'Andi Setiawan', 'Arif Wibowo', 'Joko Susilo',
+    ];
+
+    private array $ibuNames = [
+        'Siti Aminah', 'Sri Wahyuni', 'Rina Lestari', 'Dewi Anggraini', 'Nurhayati',
+        'Fitri Handayani', 'Yuni Astuti', 'Anisa Rahma', 'Maya Sari', 'Lina Marlina',
+    ];
+
     public function run(): void
     {
-        // 1. Kosongkan tabel siswas bawaan sebelum di-isi ulang
-        DB::table('siswas')->truncate();
+        $classroom = Classroom::where('nama_kelas', 'XI PPLG 4')->firstOrFail();
 
-        // 💡 KUNCI ID KELAS XI PPLG 4 (Di database kita otomatis ID-nya 15, cong!)
-        $classroomId = 15;
-
-        // 2. Data Master 34 Siswa XI PPLG 4
         $siswas = [
             ['no_absen' => 1, 'nis' => '541241001', 'nama' => 'ABSARI BEKTI SYAHFITRI', 'jenis_kelamin' => 'P'],
             ['no_absen' => 2, 'nis' => '541241003', 'nama' => 'ADARA AURORA KUSUMA', 'jenis_kelamin' => 'P'],
@@ -56,31 +62,38 @@ class SiswaKelasSeeder extends Seeder
         ];
 
         foreach ($siswas as $siswa) {
-            // B. Otomatis bikinin Akun Login di tabel 'users' dulu biar dapet ID-nya cong
             $user = User::updateOrCreate(
-                ['nis' => $siswa['nis']], // Cek biar ga duplikat berdasarkan NIS
+                ['nis' => $siswa['nis']],
                 [
                     'name' => $siswa['nama'],
-                    'email' => null, 
-                    'password' => Hash::make($siswa['nis']), // Password default pake NIS
-                    'role' => 'siswa', // 🔴 FIX: Role disesuaikan skala sekolah
-                    'classroom_id' => $classroomId, // 🔴 FIX: Pasang ID Kelas XI PPLG 4
+                    'email' => null,
+                    'password' => Hash::make($siswa['nis']),
+                    'role' => 'siswa',
+                    'classroom_id' => $classroom->id,
                 ]
             );
 
-            // A. Suntik ke tabel 'siswas' buat biodata gallery/kelas
-            DB::table('siswas')->insert([
-                'user_id' => $user->id, // Hubungkan langsung dengan id akunnya
-                'classroom_id' => $classroomId, // 🔴 FIX: Pasang ID Kelas XI PPLG 4
-                'no_absen' => $siswa['no_absen'],
-                'nis' => $siswa['nis'],
-                'nama' => $siswa['nama'],
-                'jenis_kelamin' => $siswa['jenis_kelamin'],
-                'jabatan_dev' => 'Siswa',
-                'foto' => 'default.jpg',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+            DB::table('siswas')->updateOrInsert(
+                ['nis' => $siswa['nis']],
+                [
+                    'user_id' => $user->id,
+                    'classroom_id' => $classroom->id,
+                    'no_absen' => $siswa['no_absen'],
+                    'nama' => $siswa['nama'],
+                    'jenis_kelamin' => $siswa['jenis_kelamin'],
+                    'jabatan_dev' => 'Siswa',
+                    'foto' => 'default.jpg',
+                    'tanggal_lahir' => sprintf('%04d-%02d-%02d', 2008, (($siswa['no_absen'] - 1) % 12) + 1, (($siswa['no_absen'] - 1) % 28) + 1),
+                    'whatsapp' => '08' . str_pad((string) (1200000000 + $siswa['no_absen']), 10, '0', STR_PAD_LEFT),
+                    'instagram' => '@' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', explode(' ', $siswa['nama'])[0])) . $siswa['no_absen'],
+                    'bio' => 'Siswa XI PPLG 4 SMK Telkom Purwokerto.',
+                    'quote' => 'Belajar hari ini, sukses esok hari.',
+                    'nama_ayah' => $this->ayahNames[($siswa['no_absen'] - 1) % count($this->ayahNames)],
+                    'nama_ibu' => $this->ibuNames[($siswa['no_absen'] - 1) % count($this->ibuNames)],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
         }
     }
 }

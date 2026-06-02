@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Classroom;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -10,65 +11,73 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // ==========================================
-        // 1. KELOMPOK AKUN WALI KELAS DUMMY (LINTAS TINGKAT)
-        // ==========================================
+        $xiPplg4 = Classroom::where('nama_kelas', 'XI PPLG 4')->first();
+        $xPplg1 = Classroom::where('nama_kelas', 'X PPLG 1')->first();
+        $xiiPplg1 = Classroom::where('nama_kelas', 'XII PPLG 1')->first();
 
-        // Akun Bu Biebha (Wali Kelas XI PPLG 4)
         User::updateOrCreate(
-            ['email' => 'biebha@gmail.com'], // Kalau email ini udah ada, di-update! Kalau belum, di-create!
+            ['email' => 'biebha@gmail.com'],
             [
-                'name' => 'Bu Biebha',
+                'name' => 'Biebha Arya Wirawan',
+                'nis' => null,
                 'password' => Hash::make('password123'),
                 'role' => 'wali_kelas',
-                'classroom_id' => 15,
+                'classroom_id' => $xiPplg4?->id,
             ]
         );
 
-        // Akun Pak Eko (Wali Kelas X PPLG 1)
+        User::updateOrCreate(
+            ['email' => 'walas@gmail.com'],
+            [
+                'name' => 'Pak Guru Walas',
+                'nis' => null,
+                'password' => Hash::make('password123'),
+                'role' => 'wali_kelas',
+                'classroom_id' => $xiPplg4?->id,
+            ]
+        );
+
         User::updateOrCreate(
             ['email' => 'pakeko@gmail.com'],
             [
-                'name' => 'Pak Eko (Walas X)',
+                'name' => 'Pak Eko',
+                'nis' => null,
                 'password' => Hash::make('password123'),
                 'role' => 'wali_kelas',
-                'classroom_id' => 1,
+                'classroom_id' => $xPplg1?->id,
             ]
         );
 
-        // Akun Bu Sri (Wali Kelas XII PPLG 1)
         User::updateOrCreate(
             ['email' => 'busri@gmail.com'],
             [
-                'name' => 'Bu Sri (Walas XII)',
+                'name' => 'Bu Sri',
+                'nis' => null,
                 'password' => Hash::make('password123'),
                 'role' => 'wali_kelas',
-                'classroom_id' => 25,
+                'classroom_id' => $xiiPplg1?->id,
             ]
         );
 
-
-        // ==========================================
-        // 2. KELOMPOK AKUN SISWA DAN UMUM
-        // ==========================================
-
-        // Akun Siswa
         User::updateOrCreate(
             ['email' => 'pplg4@gmail.com'],
             [
                 'name' => 'Siswa PPLG 4',
+                'nis' => null,
                 'password' => Hash::make('password123'),
                 'role' => 'siswa',
+                'classroom_id' => $xiPplg4?->id,
             ]
         );
 
-        // Akun Orang Umum
         User::updateOrCreate(
             ['email' => 'umum@gmail.com'],
             [
                 'name' => 'Masyarakat Umum',
+                'nis' => null,
                 'password' => Hash::make('password123'),
                 'role' => 'umum',
+                'classroom_id' => null,
             ]
         );
     }

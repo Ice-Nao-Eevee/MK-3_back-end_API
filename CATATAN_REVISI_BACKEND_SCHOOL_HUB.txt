@@ -1,0 +1,35 @@
+CATATAN REVISI BACKEND SCHOOL HUB
+
+1. Endpoint yang disiapkan untuk Android:
+   - GET /api/classrooms
+   - GET /api/siswa?classroom_id={id}
+   - GET /api/jadwal?kelas=XI PPLG 4
+   - GET /api/jadwal/sekarang?kelas=XI PPLG 4
+
+2. Struktur kelas:
+   - X PPLG 1-6
+   - X TJKT 1-5
+   - XI PPLG 1-7
+   - XI TJKT 1-5
+   - XII PPLG 1-7
+   - XII TJKT 1-5
+
+3. Data siswa:
+   - XI PPLG 4 memakai data asli 34 siswa.
+   - Kelas lain memakai 1 siswa dummy per kelas.
+   - Login siswa XI PPLG 4 bisa memakai NIS sebagai login_input dan password sama dengan NIS.
+
+4. Jadwal:
+   - Jadwal XI disusun mengikuti format dokumen jadwal kelas XI Semester Genap 2025/2026.
+   - Kelas X dan XII memakai jadwal dummy yang tetap penuh agar demo aplikasi terlihat hidup.
+   - Endpoint /api/jadwal/sekarang otomatis mengecek hari dan jam server.
+
+5. Cara reset database demo:
+   php artisan config:clear
+   php artisan migrate:fresh --seed
+
+6. Akun demo:
+   - Wali kelas: walas@gmail.com / password123
+   - Siswa umum: pplg4@gmail.com / password123
+   - Siswa XI PPLG 4: login_input = 541241042 / password = 541241042
+   - Umum: umum@gmail.com / password123

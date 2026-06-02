@@ -6,21 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('classrooms', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_kelas');
+            $table->string('tingkat', 10);     // X, XI, XII
+            $table->string('jurusan', 20);     // PPLG, TJKT
+            $table->unsignedTinyInteger('nomor_kelas');
+            $table->string('nama_kelas')->unique(); // contoh: XI PPLG 4
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->index(['tingkat', 'jurusan', 'nomor_kelas']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('classrooms');
