@@ -93,6 +93,8 @@ class AuthController extends Controller
             'email' => $user->email,
             'nis' => $user->nis,
             'role' => $user->role,
+            'classroom_id' => $user->classroom_id,
+            'class_name' => $user->classroom?->nama_kelas,
             'classroom' => $user->classroom ? [
                 'id' => $user->classroom->id,
                 'tingkat' => $user->classroom->tingkat,
